@@ -36,6 +36,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <annotator language="HTML" implementationClass="com.feather.idea.FeatherAnnotator"/>
+        <annotator language="TypeScript" implementationClass="com.feather.idea.TypescriptAnnotator"/>
     </extensions>
 
 </idea-plugin>

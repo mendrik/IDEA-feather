@@ -5,6 +5,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.lang.javascript.psi.ecma6.JSStringTemplateExpression;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -15,14 +16,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
 
-public class FeatherAnnotator implements Annotator {
+public class FeatherAnnotator extends GenericAnnotator implements Annotator {
 
 
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
         JSStringTemplateExpression contextOfType = PsiTreeUtil.getContextOfType(element, JSStringTemplateExpression.class);
         if (contextOfType != null) {
-            Pattern pattern = Pattern.compile("\\{\\{[^}{]+}}");
+            Pattern pattern = Pattern.compile("\\{\\{([^}{]+)}}");
             if (element instanceof XmlAttribute) {
                 XmlAttribute a = (XmlAttribute) element;
                 String name = a.getName();
@@ -31,6 +32,8 @@ public class FeatherAnnotator implements Annotator {
                     highlight(
                             range.getStartOffset(),
                             range.getEndOffset(),
+                            element,
+                            name.substring(2, name.length() - 2),
                             holder
                     );
                 }
@@ -42,6 +45,8 @@ public class FeatherAnnotator implements Annotator {
                     highlight(
                         range.getStartOffset(),
                         range.getEndOffset(),
+                        element,
+                        value.substring(2, value.length() - 2),
                         holder
                     );
                 } else {
@@ -52,6 +57,8 @@ public class FeatherAnnotator implements Annotator {
                             highlight(
                                     range.getStartOffset() + m.start(),
                                     range.getStartOffset() + m.end(),
+                                    element,
+                                    m.group(1),
                                     holder
                             );
                         }
@@ -66,6 +73,8 @@ public class FeatherAnnotator implements Annotator {
                     highlight(
                             range.getStartOffset() + m.start(),
                             range.getStartOffset() + m.end(),
+                            element,
+                            m.group(1),
                             holder
                     );
                 }
@@ -73,19 +82,4 @@ public class FeatherAnnotator implements Annotator {
             }
         }
     }
-
-    private void highlight(int start, int end, @NotNull AnnotationHolder holder) {
-        TextRange bracketOpen = new TextRange(start, start + 2);
-        Annotation annotation1 = holder.createInfoAnnotation(bracketOpen, null);
-        annotation1.setTextAttributes(DefaultLanguageHighlighterColors.BRACKETS);
-
-        TextRange range = new TextRange(start + 2, end - 2);
-        Annotation annotation2 = holder.createInfoAnnotation(range, null);
-        annotation2.setTextAttributes(DefaultLanguageHighlighterColors.INSTANCE_FIELD);
-
-        TextRange bracketClose = new TextRange(end - 2, end);
-        Annotation annotation3 = holder.createInfoAnnotation(bracketClose, null);
-        annotation3.setTextAttributes(DefaultLanguageHighlighterColors.BRACKETS);
-    }
-
 }
