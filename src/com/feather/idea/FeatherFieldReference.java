@@ -8,17 +8,17 @@ import org.jetbrains.annotations.Nullable;
 
 public class FeatherFieldReference extends PsiReferenceBase<PsiElement> {
 
-    private String key;
+    private String property;
 
-    public FeatherFieldReference(@NotNull PsiElement element, TextRange textRange) {
+    public FeatherFieldReference(@NotNull PsiElement element, TextRange textRange, String property) {
         super(element, textRange);
-        key = element.getText().substring(textRange.getStartOffset(), textRange.getEndOffset());
+        this.property = property;
     }
 
     @Nullable
     @Override
     public PsiElement resolve() {
-        return FeatherUtil.findField(key, myElement).orElse(null);
+        return FeatherUtil.findField(property, myElement).orElse(null);
     }
 
     @NotNull

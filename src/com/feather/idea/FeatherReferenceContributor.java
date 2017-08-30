@@ -23,27 +23,49 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
 
     @Override
     public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
-        registrar.registerReferenceProvider(PlatformPatterns.psiElement(),
+        registrar.registerReferenceProvider(PlatformPatterns.psiElement(XmlText.class),
             new PsiReferenceProvider() {
                 @NotNull
                 @Override
                 public PsiReference[] getReferencesByElement(
                         @NotNull PsiElement element,
                         @NotNull ProcessingContext context) {
-                if (element instanceof XmlText ||
-                    element instanceof XmlAttribute ||
-                    stringInDecorator(element)) {
-                        Matcher m = pattern.matcher(element.getText());
-                        List<FeatherFieldReference> res = new ArrayList<>();
-                        while (m.find()) {
-                            res.addAll(getReferences(element, m));
-                        }
-                        return res.toArray(new PsiReference[0]);
-                }
-                return PsiReference.EMPTY_ARRAY;
+                   return getPsiReferences(element);
                 }
             }
         );
+        registrar.registerReferenceProvider(PlatformPatterns.psiElement(XmlAttribute.class),
+            new PsiReferenceProvider() {
+                @NotNull
+                @Override
+                public PsiReference[] getReferencesByElement(
+                        @NotNull PsiElement element,
+                        @NotNull ProcessingContext context) {
+                   return getPsiReferences(element);
+                }
+            }
+        );
+        registrar.registerReferenceProvider(PlatformPatterns.psiElement(JSLiteralExpression.class),
+            new PsiReferenceProvider() {
+                @NotNull
+                @Override
+                public PsiReference[] getReferencesByElement(
+                        @NotNull PsiElement element,
+                        @NotNull ProcessingContext context) {
+                   return inDecorator(element) ? getPsiReferences(element) : new PsiReference[0];
+                }
+            }
+        );
+    }
+
+    @NotNull
+    private PsiReference[] getPsiReferences(@NotNull PsiElement element) {
+        Matcher m = pattern.matcher(element.getText());
+        List<FeatherFieldReference> res = new ArrayList<>();
+        while (m.find()) {
+            res.addAll(getReferences(element, m));
+        }
+        return res.toArray(new PsiReference[0]);
     }
 
     private Collection<FeatherFieldReference> getReferences(PsiElement element, Matcher m) {
@@ -51,19 +73,24 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
         List<FeatherFieldReference> res = new ArrayList<>();
         int start = m.start(1);
         int methodStart = fs.getMethodStart();
-        res.add(new FeatherFieldReference(element, new TextRange(start, start + fs.getProperty().length())));
+        res.add(new FeatherFieldReference(
+            element,
+            new TextRange(start, start + fs.getProperty().length()),
+            fs.getProperty()
+        ));
         for (String method : fs.getMethods()) {
-            res.add(new FeatherFieldReference(element, new TextRange(start + methodStart, start + methodStart + method.length())));
+            res.add(new FeatherFieldReference(
+                element,
+                new TextRange(start + methodStart, start + methodStart + method.length()),
+                method
+            ));
             methodStart += method.length() + 1;
         }
         return res;
     }
 
-    private boolean stringInDecorator(PsiElement element) {
-        if (element instanceof JSLiteralExpression) {
-            ES6Decorator deco = PsiTreeUtil.getParentOfType(element, ES6Decorator.class);
-            return deco != null;
-        }
-        return false;
+    private boolean inDecorator(PsiElement element) {
+        ES6Decorator deco = PsiTreeUtil.getParentOfType(element, ES6Decorator.class);
+        return deco != null;
     }
 }
