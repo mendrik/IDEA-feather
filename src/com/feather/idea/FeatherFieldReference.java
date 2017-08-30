@@ -1,5 +1,6 @@
 package com.feather.idea;
 
+import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReferenceBase;
@@ -24,6 +25,8 @@ public class FeatherFieldReference extends PsiReferenceBase<PsiElement> {
     @NotNull
     @Override
     public Object[] getVariants() {
-        return new Object[0];
+        return new Object[]{
+            LookupElementBuilder.create(property)
+        };
     }
 }

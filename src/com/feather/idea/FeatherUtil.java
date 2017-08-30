@@ -18,9 +18,9 @@ import java.util.Optional;
 class FeatherUtil {
 
     static Optional<JSQualifiedNamedElement> findField(String property, PsiElement element) {
-        TypeScriptClass parent = PsiTreeUtil.getParentOfType(element, TypeScriptClass.class);
+        TypeScriptClass parent = PsiTreeUtil.getContextOfType(element, TypeScriptClass.class);
         if (parent != null) {
-            Optional<JSQualifiedNamedElement> field = PsiTreeUtil
+            return PsiTreeUtil
                     .<JSQualifiedNamedElement>findChildrenOfAnyType(parent,
                             TypeScriptField.class,
                             TypeScriptFunction.class
@@ -28,11 +28,6 @@ class FeatherUtil {
                     .stream()
                     .filter(p  -> p.getName().equals(property))
                     .findFirst();
-            if (field.isPresent()) {
-                return field;
-            } else {
-                return Optional.empty();
-            }
         }
         return Optional.empty();
     }

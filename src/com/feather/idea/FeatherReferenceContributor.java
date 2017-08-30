@@ -2,6 +2,7 @@ package com.feather.idea;
 
 import com.intellij.lang.javascript.psi.JSLiteralExpression;
 import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
+import com.intellij.lang.javascript.psi.ecma6.JSStringTemplateExpression;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
@@ -9,9 +10,8 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceContributor;
 import com.intellij.psi.PsiReferenceProvider;
 import com.intellij.psi.PsiReferenceRegistrar;
+import com.intellij.psi.html.HtmlTag;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.psi.xml.XmlAttribute;
-import com.intellij.psi.xml.XmlText;
 import com.intellij.util.ProcessingContext;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,35 +23,20 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
 
     @Override
     public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
-        registrar.registerReferenceProvider(PlatformPatterns.psiElement(XmlText.class),
+        registrar.registerReferenceProvider(PlatformPatterns.psiElement(HtmlTag.class),
             new PsiReferenceProvider() {
-                @NotNull
-                @Override
-                public PsiReference[] getReferencesByElement(
-                        @NotNull PsiElement element,
-                        @NotNull ProcessingContext context) {
-                   return getPsiReferences(element);
-                }
-            }
-        );
-        registrar.registerReferenceProvider(PlatformPatterns.psiElement(XmlAttribute.class),
-            new PsiReferenceProvider() {
-                @NotNull
-                @Override
-                public PsiReference[] getReferencesByElement(
-                        @NotNull PsiElement element,
-                        @NotNull ProcessingContext context) {
-                   return getPsiReferences(element);
+                public PsiReference[] getReferencesByElement(PsiElement element, ProcessingContext context) {
+                    JSStringTemplateExpression parent = PsiTreeUtil.getContextOfType(element, JSStringTemplateExpression.class);
+                    if (parent != null) {
+                        return getPsiReferences(parent);
+                    }
+                    return new PsiReference[0];
                 }
             }
         );
         registrar.registerReferenceProvider(PlatformPatterns.psiElement(JSLiteralExpression.class),
             new PsiReferenceProvider() {
-                @NotNull
-                @Override
-                public PsiReference[] getReferencesByElement(
-                        @NotNull PsiElement element,
-                        @NotNull ProcessingContext context) {
+                public PsiReference[] getReferencesByElement(PsiElement element, ProcessingContext context) {
                    return inDecorator(element) ? getPsiReferences(element) : new PsiReference[0];
                 }
             }
