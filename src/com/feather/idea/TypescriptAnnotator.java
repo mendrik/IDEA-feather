@@ -4,7 +4,6 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.lang.javascript.psi.JSLiteralExpression;
 import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
-import com.intellij.lang.javascript.psi.ecma6.TypeScriptField;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
@@ -13,10 +12,7 @@ public class TypescriptAnnotator extends GenericAnnotator implements Annotator {
 
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
-        // System.out.println(element.getClass().getName() + ": " + element.getText());
-        if (element instanceof TypeScriptField) {
-            // System.out.println(element.getText());
-        } else if (element instanceof JSLiteralExpression) {
+        if (element instanceof JSLiteralExpression) {
             ES6Decorator deco = PsiTreeUtil.getParentOfType(element, ES6Decorator.class);
             if (deco != null) {
                 doMatches(element, holder);
