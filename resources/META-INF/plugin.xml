@@ -5,8 +5,7 @@
     <vendor email="support@feather-ts.com" url="http://www.feather-ts.com">Feather-ts</vendor>
 
     <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+      Syntax highlighting plugin for templates and annotations in <a href="http://www.feather-ts.com">Feather-Ts</a> projects.
     ]]></description>
 
     <change-notes><![CDATA[
