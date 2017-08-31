@@ -2,7 +2,7 @@ package com.feather.idea;
 
 import com.intellij.lang.javascript.psi.JSLiteralExpression;
 import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
-import com.intellij.lang.javascript.psi.ecma6.JSStringTemplateExpression;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
@@ -10,8 +10,10 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceContributor;
 import com.intellij.psi.PsiReferenceProvider;
 import com.intellij.psi.PsiReferenceRegistrar;
-import com.intellij.psi.html.HtmlTag;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.xml.XmlAttribute;
+import com.intellij.psi.xml.XmlAttributeValue;
+import com.intellij.psi.xml.XmlToken;
 import com.intellij.util.ProcessingContext;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,14 +23,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class FeatherReferenceContributor extends PsiReferenceContributor implements Constants {
 
+    private static final Key<PsiReference[]> INJECTED_REFERENCES = Key.create("injected references");
+
     @Override
     public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
-        registrar.registerReferenceProvider(PlatformPatterns.psiElement(HtmlTag.class),
+        registrar.registerReferenceProvider(PlatformPatterns.psiElement(),
             new PsiReferenceProvider() {
                 public PsiReference[] getReferencesByElement(PsiElement element, ProcessingContext context) {
-                    JSStringTemplateExpression parent = PsiTreeUtil.getContextOfType(element, JSStringTemplateExpression.class);
-                    if (parent != null) {
-                        return getPsiReferences(parent);
+                    if (element instanceof XmlAttribute || element instanceof XmlAttributeValue || element instanceof XmlToken) {
+                        return getPsiReferences(element);
                     }
                     return new PsiReference[0];
                 }
