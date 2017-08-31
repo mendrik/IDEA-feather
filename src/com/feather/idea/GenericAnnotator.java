@@ -21,10 +21,16 @@ import org.jetbrains.annotations.NotNull;
 public abstract class GenericAnnotator implements Annotator {
 
     protected void highlight(int start, String innerText, PsiElement element, @NotNull AnnotationHolder holder) {
+        highlight(start, innerText, element, holder, true);
+    }
+
+    protected void highlight(int start, String innerText, PsiElement element, @NotNull AnnotationHolder holder, boolean brackets) {
         FeatherStatement fs = new FeatherStatement(innerText);
 
-        addAnnotation(start - 2, start,
-                BRACES, holder, true);
+        if (brackets) {
+            addAnnotation(start - 2, start,
+                    BRACES, holder, true);
+        }
 
         Optional<JSQualifiedNamedElement> field =
                 FeatherUtil.findField(fs.getProperty(), element);
@@ -40,10 +46,15 @@ public abstract class GenericAnnotator implements Annotator {
             methodStart += method.length() + 1;
         }
 
-        addAnnotation(start + innerText.length(), start + innerText.length() + 2, BRACES, holder, true);
+        if (brackets) {
+            addAnnotation(start + innerText.length(), start + innerText.length() + 2, BRACES, holder, true);
+        }
     }
 
     protected void doMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
+        doMatches(element, holder, true);
+    }
+    protected void doMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder, boolean brackets) {
         String text = element.getText();
         Matcher m = pattern.matcher(text);
         TextRange range = element.getTextRange();
@@ -52,7 +63,8 @@ public abstract class GenericAnnotator implements Annotator {
                     range.getStartOffset() + m.start(1),
                     m.group(1),
                     element,
-                    holder
+                    holder,
+                    brackets
             );
         }
 
