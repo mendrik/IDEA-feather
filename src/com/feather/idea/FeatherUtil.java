@@ -33,8 +33,9 @@ class FeatherUtil {
             if (field.isPresent()) {
                 return field;
             }
+            return findBequeathProperty(property, parent);
         }
-        return findBequeathProperty(property, parent);
+        return Optional.empty();
     }
 
     private static Optional<JSQualifiedNamedElement> findBequeathProperty(String property, JSElement classElement) {

@@ -4,11 +4,13 @@ import static com.feather.idea.Constants.pattern;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.BRACES;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.INSTANCE_FIELD;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.INSTANCE_METHOD;
+import static com.intellij.openapi.editor.colors.CodeInsightColors.ERRORS_ATTRIBUTES;
 
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.lang.javascript.psi.ecmal4.JSQualifiedNamedElement;
+import com.intellij.openapi.editor.colors.CodeInsightColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -62,10 +64,11 @@ public abstract class GenericAnnotator implements Annotator {
         Annotation annotation;
         if (isProperty) {
             annotation = holder.createInfoAnnotation(range, null);
+            annotation.setTextAttributes(color);
         } else {
             annotation = holder.createErrorAnnotation(range, "Unresolved property");
+            annotation.setTextAttributes(ERRORS_ATTRIBUTES);
         }
-        annotation.setTextAttributes(color);
 
     }
 
