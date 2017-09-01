@@ -28,6 +28,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FeatherReferenceContributor extends PsiReferenceContributor implements Constants {
 
+    private static final PsiReference[] emptyReferences = new PsiReference[0];
+
     @Override
     public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
         registrar.registerReferenceProvider(PlatformPatterns.psiElement(),
@@ -35,26 +37,22 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
                 public PsiReference[] getReferencesByElement(PsiElement element, ProcessingContext context) {
                     if (element instanceof XmlAttribute || element instanceof XmlAttributeValue || element instanceof XmlToken) {
                         PsiReference[] references = getHtmlReferences(element);
-                        PsiReference[] cssClassReferences = null;
-                        if (element instanceof XmlAttribute) {
-                            XmlAttribute attribute = (XmlAttribute) element;
+                        if (element instanceof XmlAttributeValue) {
+                            XmlAttribute attribute = (XmlAttribute) element.getParent();
                             if ("class".equalsIgnoreCase(attribute.getName())) {
-                                XmlAttributeValue value = findChildOfType(element, XmlAttributeValue.class);
-                                if (value != null && value.getText() != null) {
-                                    cssClassReferences = getCssClassReferences(value);
-                                }
+                                return (PsiReference[]) ArrayUtils.addAll(references, getCssClassReferences(element));
                             }
                         }
-                        return (PsiReference[]) ArrayUtils.addAll(references, cssClassReferences);
+                        return references;
                     } else if (element instanceof XmlTag) {
                         XmlTag tag = (XmlTag) element;
                         return getTagReference(tag.getName(), tag)
                             .map(psiReference -> new PsiReference[]{
                                 psiReference
                             })
-                            .orElseGet(() -> new PsiReference[0]);
+                            .orElse(emptyReferences);
                     }
-                    return new PsiReference[0];
+                    return emptyReferences;
                 }
             }
         );
@@ -67,15 +65,15 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
         );
     }
 
-    private PsiReference[] getCssClassReferences(XmlAttributeValue value) {
+    private PsiReference[] getCssClassReferences(PsiElement value) {
         Matcher m = classSplitter.matcher(value.getText());
         List<FeatherClassReference> res = new ArrayList<>();
         while (m.find()) {
             String selector = "." + m.group(1);
             Optional<TypeScriptClass> classBySelector = FeatherUtil.findClassBySelector(selector, value);
-            if (classBySelector.isPresent()) {
-                res.add(new FeatherClassReference(value, new TextRange(m.start(1), m.end(1)), classBySelector.get()));
-            }
+            classBySelector.ifPresent(typeScriptClass -> res.add(
+                new FeatherClassReference(value, new TextRange(m.start(1), m.end(1)), typeScriptClass)
+            ));
         }
         return res.toArray(new PsiReference[res.size()]);
     }

@@ -6,9 +6,12 @@ import static com.intellij.psi.util.PsiTreeUtil.getParentOfType;
 import static java.util.Optional.ofNullable;
 
 import com.intellij.lang.ecmascript6.psi.impl.ES6FieldStatementImpl;
+import com.intellij.lang.javascript.ecmascript6.TypeScriptUtil;
 import com.intellij.lang.javascript.psi.JSElement;
 import com.intellij.lang.javascript.psi.JSLiteralExpression;
 import com.intellij.lang.javascript.psi.JSProperty;
+import com.intellij.lang.javascript.psi.JSReferenceExpression;
+import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
 import com.intellij.lang.javascript.psi.ecma6.TypeScriptClass;
 import com.intellij.lang.javascript.psi.ecma6.TypeScriptField;
 import com.intellij.lang.javascript.psi.ecma6.TypeScriptFunction;
@@ -77,6 +80,21 @@ class FeatherUtil {
                     }).isPresent()
             )
             .findFirst()
-            .flatMap(p -> ofNullable(getParentOfType(p, TypeScriptClass.class)));
+            .flatMap(p ->
+                ofNullable(getParentOfType(p, ES6Decorator.class))
+                    .filter(d -> {
+                        Optional<JSReferenceExpression> expr = PsiTreeUtil
+                            .findChildrenOfType(d, JSReferenceExpression.class)
+                            .stream()
+                            .findFirst();
+                        return expr.filter(jsReferenceExpression ->
+                            "construct".equalsIgnoreCase(jsReferenceExpression
+                                .getReferenceNameElement()
+                                .getText()
+                            ))
+                            .isPresent();
+                    })
+                    .flatMap(d -> ofNullable(getParentOfType(d, TypeScriptClass.class)))
+            );
     }
 }
