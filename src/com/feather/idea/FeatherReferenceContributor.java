@@ -70,8 +70,9 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
     private PsiReference[] getSingleBraceReferences(PsiElement value) {
         Matcher m = singleBraces.matcher(value.getText());
         List<FeatherFieldReference> res = new ArrayList<>();
-        while (m.find()) {
+        if (m.matches()) {
             String property = m.group(1);
+            System.out.println(property);
             FeatherUtil.findField(property, value).ifPresent(f -> {
                 TextRange textRange = new TextRange(m.start(1), m.end(1));
                 res.add(
