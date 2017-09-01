@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.feather-ts.intellij</id>
     <name>Feather-ts code support</name>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <vendor email="support@feather-ts.com" url="http://www.feather-ts.com">Feather-ts</vendor>
 
     <description><![CDATA[

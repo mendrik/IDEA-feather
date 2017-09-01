@@ -73,13 +73,12 @@ abstract class GenericAnnotator implements Annotator {
         String text = element.getText();
         Matcher m = singleBraces.matcher(text);
         int start = element.getTextRange().getStartOffset();
-        System.out.println(text);
         if (m.matches()) {
             String property = m.group(1);
             int matchStart = start + m.start(1);
             int matchEnd = start + m.end(1);
             addAnnotation(matchStart - 1, matchStart, BRACES, holder, true);
-            addAnnotation(matchEnd - 1, matchEnd, BRACES, holder, true);
+            addAnnotation(matchEnd, matchEnd + 1, BRACES, holder, true);
 
             TextRange tr = new TextRange(matchStart, matchEnd);
             Annotation annotation = holder.createInfoAnnotation(tr, null);
