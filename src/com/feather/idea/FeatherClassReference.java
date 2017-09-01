@@ -5,31 +5,29 @@ import com.intellij.lang.javascript.psi.ecma6.TypeScriptClass;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReferenceBase;
-import com.intellij.psi.xml.XmlTag;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class FeatherClassReference extends PsiReferenceBase<XmlTag> {
+public class FeatherClassReference extends PsiReferenceBase<PsiElement> {
 
-    private String className;
+    private TypeScriptClass typeScriptClass;
 
-    FeatherClassReference(@NotNull XmlTag element, TextRange textRange, String className) {
+    FeatherClassReference(@NotNull PsiElement element, @NotNull TextRange textRange, TypeScriptClass typeScriptClass) {
         super(element, textRange);
-        this.className = className;
-        System.out.println(className);
+        this.typeScriptClass = typeScriptClass;
     }
 
     @Nullable
     @Override
     public PsiElement resolve() {
-        return FeatherUtil.findClassBySelector(className, myElement).orElse(null);
+        return typeScriptClass;
     }
 
     @NotNull
     @Override
     public Object[] getVariants() {
         return new Object[]{
-            LookupElementBuilder.create(className)
+            LookupElementBuilder.create(typeScriptClass)
         };
     }
 }

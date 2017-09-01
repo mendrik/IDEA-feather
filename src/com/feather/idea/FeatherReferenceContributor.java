@@ -1,7 +1,10 @@
 package com.feather.idea;
 
+import static com.intellij.psi.util.PsiTreeUtil.findChildOfType;
+
 import com.intellij.lang.javascript.psi.JSLiteralExpression;
 import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
+import com.intellij.lang.javascript.psi.ecma6.TypeScriptClass;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
@@ -20,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
+import org.apache.commons.lang.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class FeatherReferenceContributor extends PsiReferenceContributor implements Constants {
@@ -30,18 +34,25 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
             new PsiReferenceProvider() {
                 public PsiReference[] getReferencesByElement(PsiElement element, ProcessingContext context) {
                     if (element instanceof XmlAttribute || element instanceof XmlAttributeValue || element instanceof XmlToken) {
-                        return getPsiReferences(element);
+                        PsiReference[] references = getHtmlReferences(element);
+                        PsiReference[] cssClassReferences = null;
+                        if (element instanceof XmlAttribute) {
+                            XmlAttribute attribute = (XmlAttribute) element;
+                            if ("class".equalsIgnoreCase(attribute.getName())) {
+                                XmlAttributeValue value = findChildOfType(element, XmlAttributeValue.class);
+                                if (value != null && value.getText() != null) {
+                                    cssClassReferences = getCssClassReferences(value);
+                                }
+                            }
+                        }
+                        return (PsiReference[]) ArrayUtils.addAll(references, cssClassReferences);
                     } else if (element instanceof XmlTag) {
                         XmlTag tag = (XmlTag) element;
-                        PsiReference[] references = getTagReference(tag.getName(), tag)
+                        return getTagReference(tag.getName(), tag)
                             .map(psiReference -> new PsiReference[]{
                                 psiReference
                             })
                             .orElseGet(() -> new PsiReference[0]);
-                        if (references.length > 0) {
-                            System.out.println(tag.getName());
-                        }
-                        return references;
                     }
                     return new PsiReference[0];
                 }
@@ -50,28 +61,41 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
         registrar.registerReferenceProvider(PlatformPatterns.psiElement(JSLiteralExpression.class),
             new PsiReferenceProvider() {
                 public PsiReference[] getReferencesByElement(PsiElement element, ProcessingContext context) {
-                    return inDecorator(element) ? getPsiReferences(element) : new PsiReference[0];
+                    return inDecorator(element) ? getHtmlReferences(element) : new PsiReference[0];
                 }
             }
         );
     }
 
+    private PsiReference[] getCssClassReferences(XmlAttributeValue value) {
+        Matcher m = classSplitter.matcher(value.getText());
+        List<FeatherClassReference> res = new ArrayList<>();
+        while (m.find()) {
+            String selector = "." + m.group(1);
+            Optional<TypeScriptClass> classBySelector = FeatherUtil.findClassBySelector(selector, value);
+            if (classBySelector.isPresent()) {
+                res.add(new FeatherClassReference(value, new TextRange(m.start(1), m.end(1)), classBySelector.get()));
+            }
+        }
+        return res.toArray(new PsiReference[res.size()]);
+    }
+
     private Optional<FeatherClassReference> getTagReference(String tagName, XmlTag tagElement) {
         return FeatherUtil.findClassBySelector(tagName, tagElement)
-            .map(e -> new FeatherClassReference(tagElement, new TextRange(1, tagName.length() + 1), tagName));
+            .map(e -> new FeatherClassReference(tagElement, new TextRange(1, tagName.length() + 1), e));
     }
 
     @NotNull
-    private PsiReference[] getPsiReferences(@NotNull PsiElement element) {
+    private PsiReference[] getHtmlReferences(@NotNull PsiElement element) {
         Matcher m = pattern.matcher(element.getText());
         List<FeatherFieldReference> res = new ArrayList<>();
         while (m.find()) {
-            res.addAll(getReferences(element, m));
+            res.addAll(getReferencesToFields(element, m));
         }
-        return res.toArray(new PsiReference[0]);
+        return res.toArray(new PsiReference[res.size()]);
     }
 
-    private Collection<FeatherFieldReference> getReferences(PsiElement element, Matcher m) {
+    private Collection<FeatherFieldReference> getReferencesToFields(PsiElement element, Matcher m) {
         FeatherStatement fs = new FeatherStatement(m.group(1));
         List<FeatherFieldReference> res = new ArrayList<>();
         int start = m.start(1);
