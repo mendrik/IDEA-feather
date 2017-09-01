@@ -19,7 +19,7 @@ public class TypescriptAnnotator extends GenericAnnotator implements Annotator {
                 doMatches(element, holder);
 
                 JSProperty prop = PsiTreeUtil.getParentOfType(element, JSProperty.class);
-                if (prop.getName().equals("body")) {
+                if ("body".equals(prop.getName())) {
                     String text = element.getText();
                     highlight(
                             element.getTextRange().getStartOffset() + 1,
