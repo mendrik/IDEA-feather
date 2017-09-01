@@ -16,7 +16,7 @@ public class TypescriptAnnotator extends GenericAnnotator implements Annotator {
         if (element instanceof JSLiteralExpression) {
             ES6Decorator deco = PsiTreeUtil.getParentOfType(element, ES6Decorator.class);
             if (deco != null) {
-                doMatches(element, holder);
+                doDoubleBraceMatches(element, holder);
 
                 JSProperty prop = PsiTreeUtil.getParentOfType(element, JSProperty.class);
                 if (prop != null && "body".equals(prop.getName())) {
@@ -28,7 +28,7 @@ public class TypescriptAnnotator extends GenericAnnotator implements Annotator {
                         fs,
                         element,
                         holder,
-                        false
+                        0
                     );
                 }
             }

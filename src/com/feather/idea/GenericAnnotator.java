@@ -1,9 +1,11 @@
 package com.feather.idea;
 
-import static com.feather.idea.Constants.pattern;
+import static com.feather.idea.Constants.doubleBraces;
+import static com.feather.idea.Constants.singleBraces;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.BRACES;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.INSTANCE_FIELD;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.INSTANCE_METHOD;
+import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.STATIC_FIELD;
 import static com.intellij.openapi.editor.colors.CodeInsightColors.ERRORS_ATTRIBUTES;
 
 import com.intellij.lang.annotation.Annotation;
@@ -20,15 +22,17 @@ import org.jetbrains.annotations.NotNull;
 abstract class GenericAnnotator implements Annotator {
 
     void highlight(boolean isValid, int start, FeatherStatement fs, PsiElement element,
-        @NotNull AnnotationHolder holder, boolean brackets) {
-        highlight(isValid, start, fs, element, holder, brackets, INSTANCE_FIELD);
+        @NotNull AnnotationHolder holder, int braceLength) {
+        highlight(isValid, start, fs, element, holder, braceLength, INSTANCE_FIELD);
     }
 
     void highlight(boolean isValid, int start, FeatherStatement fs, PsiElement element,
-        @NotNull AnnotationHolder holder, boolean brackets, TextAttributesKey style) {
+        @NotNull AnnotationHolder holder, int braceLength, TextAttributesKey style) {
 
-        if (brackets) {
-            addAnnotation(start - 2, start,
+        if (braceLength > 0) {
+            addAnnotation(start - braceLength, start,
+                BRACES, holder, true);
+            addAnnotation(start + fs.length(), start + fs.length() + braceLength,
                 BRACES, holder, true);
         }
 
@@ -42,19 +46,15 @@ abstract class GenericAnnotator implements Annotator {
                 INSTANCE_METHOD, holder, resolvedMethods.isPresent());
             methodStart += method.length() + 1;
         }
-
-        if (brackets) {
-            addAnnotation(start + fs.length(), start + fs.length() + 2, BRACES, holder, true);
-        }
     }
 
-    void doMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
-        doMatches(element, holder, true);
+    void doDoubleBraceMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
+        doDoubleBraceMatches(element, holder, 2);
     }
 
-    private void doMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder, boolean brackets) {
+    private void doDoubleBraceMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder, int braceLength) {
         String text = element.getText();
-        Matcher m = pattern.matcher(text);
+        Matcher m = doubleBraces.matcher(text);
         int start = element.getTextRange().getStartOffset();
         while (m.find()) {
             FeatherStatement fs = new FeatherStatement(m.group(1));
@@ -64,8 +64,29 @@ abstract class GenericAnnotator implements Annotator {
                 fs,
                 element,
                 holder,
-                brackets
+                braceLength
             );
+        }
+    }
+
+    void doSingleBraceMatches(PsiElement element, AnnotationHolder holder) {
+        String text = element.getText();
+        Matcher m = singleBraces.matcher(text);
+        int start = element.getTextRange().getStartOffset();
+        while (m.find()) {
+            FeatherStatement fs = new FeatherStatement(m.group(1));
+            int matchStart = start + m.start(1);
+            int matchEnd = start + m.end(1);
+            addAnnotation(matchStart - 1, matchStart, BRACES, holder, true);
+            addAnnotation(matchEnd - 1, matchEnd, BRACES, holder, true);
+
+            TextRange tr = new TextRange(matchStart, matchEnd);
+            Annotation annotation = holder.createInfoAnnotation(tr, null);
+            if (FeatherUtil.findField(fs.getProperty(), element).isPresent()) {
+                annotation.setTextAttributes(INSTANCE_FIELD);
+            } else {
+                annotation.setTextAttributes(STATIC_FIELD);
+            }
         }
     }
 

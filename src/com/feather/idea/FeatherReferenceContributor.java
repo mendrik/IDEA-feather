@@ -41,6 +41,8 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
                             XmlAttribute attribute = (XmlAttribute) element.getParent();
                             if ("class".equalsIgnoreCase(attribute.getName())) {
                                 return (PsiReference[]) ArrayUtils.addAll(references, getCssClassReferences(element));
+                            } else {
+                                return (PsiReference[]) ArrayUtils.addAll(references, getSingleBraceReferences(element));
                             }
                         }
                         return references;
@@ -65,6 +67,21 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
         );
     }
 
+    private PsiReference[] getSingleBraceReferences(PsiElement value) {
+        Matcher m = singleBraces.matcher(value.getText());
+        List<FeatherFieldReference> res = new ArrayList<>();
+        while (m.find()) {
+            String property = m.group(1);
+            FeatherUtil.findField(property, value).ifPresent(f -> {
+                TextRange textRange = new TextRange(m.start(1), m.end(1));
+                res.add(
+                    new FeatherFieldReference(value, textRange, property)
+                );
+            });
+        }
+        return res.toArray(new PsiReference[res.size()]);
+    }
+
     private PsiReference[] getCssClassReferences(PsiElement value) {
         Matcher m = classSplitter.matcher(value.getText());
         List<FeatherClassReference> res = new ArrayList<>();
@@ -85,7 +102,7 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
 
     @NotNull
     private PsiReference[] getHtmlReferences(@NotNull PsiElement element) {
-        Matcher m = pattern.matcher(element.getText());
+        Matcher m = doubleBraces.matcher(element.getText());
         List<FeatherFieldReference> res = new ArrayList<>();
         while (m.find()) {
             res.addAll(getReferencesToFields(element, m));

@@ -28,13 +28,14 @@ public class FeatherAnnotator extends GenericAnnotator implements Annotator {
                 XmlTag tag = (XmlTag) element;
                 tryTagAnnotation(tag.getName(), element, holder);
             } else if (element instanceof XmlAttribute) {
-                doMatches(element, holder);
+                doDoubleBraceMatches(element, holder);
+                doSingleBraceMatches(element, holder);
                 XmlAttribute attribute = (XmlAttribute) element;
                 if ("class".equalsIgnoreCase(attribute.getName())) {
                     tryClassAnnotations(findChildOfType(element, XmlAttributeValue.class), holder);
                 }
             } else if (element instanceof XmlText) {
-                doMatches(element, holder);
+                doDoubleBraceMatches(element, holder);
             }
         }
     }
@@ -48,7 +49,7 @@ public class FeatherAnnotator extends GenericAnnotator implements Annotator {
                 fs,
                 element,
                 holder,
-                false,
+                0,
                 DefaultLanguageHighlighterColors.CLASS_REFERENCE
             );
         }
@@ -68,7 +69,7 @@ public class FeatherAnnotator extends GenericAnnotator implements Annotator {
                     fs,
                     element,
                     holder,
-                    false,
+                    0,
                     DefaultLanguageHighlighterColors.CLASS_REFERENCE
                 );
             }
