@@ -1,7 +1,5 @@
 package com.feather.idea;
 
-import static com.intellij.psi.util.PsiTreeUtil.findChildOfType;
-
 import com.intellij.lang.javascript.psi.JSLiteralExpression;
 import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
 import com.intellij.lang.javascript.psi.ecma6.TypeScriptClass;
