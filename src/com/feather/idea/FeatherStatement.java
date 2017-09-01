@@ -9,8 +9,10 @@ public class FeatherStatement {
     private final List<String> methods;
     private final String property;
     private final int methodStart;
+    private String text;
 
-    public FeatherStatement(String text) {
+    FeatherStatement(String text) {
+        this.text = text;
         String[] parts = text.split(":");
         String[] propertyParts = parts[0].split("\\.");
         this.property = propertyParts[0];
@@ -23,15 +25,19 @@ public class FeatherStatement {
         return deepProperties;
     }
 
-    public List<String> getMethods() {
+    List<String> getMethods() {
         return methods;
     }
 
-    public String getProperty() {
+    String getProperty() {
         return property;
     }
 
-    public int getMethodStart() {
+    int getMethodStart() {
         return methodStart;
+    }
+
+    int length() {
+        return text.length();
     }
 }

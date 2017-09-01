@@ -21,12 +21,14 @@ public class TypescriptAnnotator extends GenericAnnotator implements Annotator {
                 JSProperty prop = PsiTreeUtil.getParentOfType(element, JSProperty.class);
                 if (prop != null && "body".equals(prop.getName())) {
                     String text = element.getText();
+                    FeatherStatement fs = new FeatherStatement(text.substring(1, text.length() - 1));
                     highlight(
-                            element.getTextRange().getStartOffset() + 1,
-                            text.substring(1, text.length() -1),
-                            element,
-                            holder,
-                            false
+                        FeatherUtil.findField(fs.getProperty(), element).isPresent(),
+                        element.getTextRange().getStartOffset() + 1,
+                        fs,
+                        element,
+                        holder,
+                        false
                     );
                 }
             }
