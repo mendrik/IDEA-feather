@@ -57,6 +57,9 @@ public class FeatherAnnotator extends GenericAnnotator implements Annotator {
     }
 
     private void tryClassAnnotations(XmlAttributeValue element, AnnotationHolder holder) {
+        if (element == null) {
+            return;
+        }
         String text = element.getText();
         Matcher m = classSplitter.matcher(text);
         TextRange range = element.getTextRange();
