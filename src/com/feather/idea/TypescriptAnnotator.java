@@ -17,19 +17,21 @@ public class TypescriptAnnotator extends GenericAnnotator implements Annotator {
             ES6Decorator deco = PsiTreeUtil.getParentOfType(element, ES6Decorator.class);
             if (deco != null) {
                 doDoubleBraceMatches(element, holder);
-
                 JSProperty prop = PsiTreeUtil.getParentOfType(element, JSProperty.class);
-                if (prop != null && "body".equals(prop.getName())) {
-                    String text = element.getText();
-                    FeatherStatement fs = new FeatherStatement(text.substring(1, text.length() - 1));
-                    highlight(
-                        FeatherUtil.findField(fs.getProperty(), element).isPresent(),
-                        element.getTextRange().getStartOffset() + 1,
-                        fs,
-                        element,
-                        holder,
-                        0
-                    );
+                if (prop != null) {
+                    String name = prop.getName();
+                    if ("body".equals(name)){
+                        String text = element.getText();
+                        FeatherStatement fs = new FeatherStatement(text.substring(1, text.length() - 1));
+                        highlight(
+                            FeatherUtil.findField(fs.getProperty(), element).isPresent(),
+                            element.getTextRange().getStartOffset() + 1,
+                            fs,
+                            element,
+                            holder,
+                            0
+                        );
+                    }
                 }
             }
         }

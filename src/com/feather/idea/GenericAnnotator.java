@@ -52,23 +52,28 @@ abstract class GenericAnnotator implements Annotator {
         doDoubleBraceMatches(element, holder, 2);
     }
 
-    private void doDoubleBraceMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder, int braceLength) {
+    void doDoubleBraceMatchesInTemplate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
         if (FeatherUtil.inTemplateMethod(element)) {
-            String text = element.getText();
-            Matcher m = doubleBraces.matcher(text);
-            int start = element.getTextRange().getStartOffset();
-            while (m.find()) {
-                FeatherStatement fs = new FeatherStatement(m.group(1));
-                highlight(
-                    FeatherUtil.findField(fs.getProperty(), element).isPresent(),
-                    start + m.start(1),
-                    fs,
-                    element,
-                    holder,
-                    braceLength
-                );
-            }
+            doDoubleBraceMatches(element, holder, 2);
         }
+    }
+
+    private void doDoubleBraceMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder, int braceLength) {
+        String text = element.getText();
+        Matcher m = doubleBraces.matcher(text);
+        int start = element.getTextRange().getStartOffset();
+        while (m.find()) {
+            FeatherStatement fs = new FeatherStatement(m.group(1));
+            highlight(
+                FeatherUtil.findField(fs.getProperty(), element).isPresent(),
+                start + m.start(1),
+                fs,
+                element,
+                holder,
+                braceLength
+            );
+        }
+        m.reset();
     }
 
     void doSingleBraceMatches(PsiElement element, AnnotationHolder holder) {

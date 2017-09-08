@@ -16,6 +16,7 @@ import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
 import com.intellij.lang.javascript.psi.ecma6.TypeScriptClass;
 import com.intellij.lang.javascript.psi.ecma6.TypeScriptField;
 import com.intellij.lang.javascript.psi.ecma6.TypeScriptFunction;
+import com.intellij.lang.javascript.psi.ecmal4.JSClass;
 import com.intellij.lang.javascript.psi.ecmal4.JSQualifiedNamedElement;
 import com.intellij.lang.javascript.psi.resolve.JSResolveUtil;
 import com.intellij.lang.javascript.psi.stubs.JSSymbolIndex2;
@@ -26,6 +27,7 @@ import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 
 class FeatherUtil {
@@ -33,20 +35,31 @@ class FeatherUtil {
     static Optional<JSQualifiedNamedElement> findField(String property, PsiElement element) {
         TypeScriptClass parent = PsiTreeUtil.getContextOfType(element, TypeScriptClass.class);
         if (parent != null) {
-            Optional<JSQualifiedNamedElement> field = PsiTreeUtil
-                .<JSQualifiedNamedElement>findChildrenOfAnyType(parent,
-                    TypeScriptField.class,
-                    TypeScriptFunction.class
-                )
-                .stream()
-                .filter(p -> Objects.equals(p.getName(), property))
-                .findFirst();
+            Optional<JSQualifiedNamedElement> field = findProperty(property, parent);
             if (field.isPresent()) {
                 return field;
+            }
+            JSClass[] superClasses = parent.getSuperClasses();
+            for (JSClass clazz: superClasses) {
+                field = findProperty(property, clazz);
+                if (field.isPresent()) {
+                    return field;
+                }
             }
             return findBequeathProperty(property, parent);
         }
         return Optional.empty();
+    }
+
+    private static Optional<JSQualifiedNamedElement> findProperty(String property, JSClass parent) {
+        return PsiTreeUtil
+                    .<JSQualifiedNamedElement>findChildrenOfAnyType(parent,
+                        TypeScriptField.class,
+                        TypeScriptFunction.class
+                    )
+                    .stream()
+                    .filter(p -> Objects.equals(p.getName(), property))
+                    .findFirst();
     }
 
     private static Optional<JSQualifiedNamedElement> findBequeathProperty(String property, JSElement classElement) {

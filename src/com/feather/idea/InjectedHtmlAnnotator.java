@@ -28,7 +28,7 @@ public class InjectedHtmlAnnotator extends GenericAnnotator implements Annotator
                 XmlTag tag = (XmlTag) element;
                 tryTagAnnotation(tag.getName(), element, holder);
             } else if (element instanceof XmlAttribute) {
-                doDoubleBraceMatches(element, holder);
+                doDoubleBraceMatchesInTemplate(element, holder);
                 XmlAttribute attribute = (XmlAttribute) element;
                 if ("class".equalsIgnoreCase(attribute.getName())) {
                     tryClassAnnotations(findChildOfType(element, XmlAttributeValue.class), holder);
@@ -36,7 +36,7 @@ public class InjectedHtmlAnnotator extends GenericAnnotator implements Annotator
             } else if (element instanceof XmlAttributeValue) {
                 doSingleBraceMatches(element, holder);
             } else if (element instanceof XmlText) {
-                doDoubleBraceMatches(element, holder);
+                doDoubleBraceMatchesInTemplate(element, holder);
             }
         }
     }
