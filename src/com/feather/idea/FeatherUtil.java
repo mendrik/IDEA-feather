@@ -97,4 +97,21 @@ class FeatherUtil {
                     .flatMap(d -> ofNullable(getParentOfType(d, TypeScriptClass.class)))
             );
     }
+
+    static boolean inTemplateMethod(PsiElement element) {
+        TypeScriptFunction func = PsiTreeUtil.getParentOfType(element, TypeScriptFunction.class);
+        if (func != null) {
+            ES6Decorator deco = PsiTreeUtil.findChildOfType(func, ES6Decorator.class);
+            if (deco != null) {
+                JSReferenceExpression decoCall = PsiTreeUtil.findChildOfType(deco, JSReferenceExpression.class);
+                if (decoCall != null) {
+                    if ("template".equalsIgnoreCase(decoCall.getReferenceName())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 }

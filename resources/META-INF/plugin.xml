@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.feather-ts.intellij</id>
     <name>Feather-ts code support</name>
-    <version>1.0.8</version>
+    <version>1.0.9</version>
     <vendor email="support@feather-ts.com" url="http://www.feather-ts.com">Feather-ts</vendor>
 
     <description><![CDATA[
@@ -30,7 +30,7 @@
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <annotator language="HTML" implementationClass="com.feather.idea.FeatherAnnotator"/>
+        <annotator language="HTML" implementationClass="com.feather.idea.InjectedHtmlAnnotator"/>
         <annotator language="TypeScript" implementationClass="com.feather.idea.TypescriptAnnotator"/>
         <psi.referenceContributor implementation="com.feather.idea.FeatherReferenceContributor"/>
     </extensions>

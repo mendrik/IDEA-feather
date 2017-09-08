@@ -1,8 +1,12 @@
 package com.feather.idea;
 
+import static com.feather.idea.FeatherUtil.inTemplateMethod;
+
 import com.intellij.lang.javascript.psi.JSLiteralExpression;
+import com.intellij.lang.javascript.psi.JSReferenceExpression;
 import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
 import com.intellij.lang.javascript.psi.ecma6.TypeScriptClass;
+import com.intellij.lang.javascript.psi.ecma6.TypeScriptFunction;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
@@ -39,7 +43,7 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
                             XmlAttribute attribute = (XmlAttribute) element.getParent();
                             if ("class".equalsIgnoreCase(attribute.getName())) {
                                 return (PsiReference[]) ArrayUtils.addAll(references, getCssClassReferences(element));
-                            } else {
+                            } else if (inTemplateMethod(element)) {
                                 return (PsiReference[]) ArrayUtils.addAll(references, getSingleBraceReferences(element));
                             }
                         }
@@ -70,7 +74,6 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
         List<FeatherFieldReference> res = new ArrayList<>();
         if (m.matches()) {
             String property = m.group(1);
-            System.out.println(property);
             FeatherUtil.findField(property, value).ifPresent(f -> {
                 TextRange textRange = new TextRange(m.start(1), m.end(1));
                 res.add(
@@ -134,4 +137,5 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
         ES6Decorator deco = PsiTreeUtil.getParentOfType(element, ES6Decorator.class);
         return deco != null;
     }
+
 }

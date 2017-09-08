@@ -2,6 +2,7 @@ package com.feather.idea;
 
 import static com.feather.idea.Constants.doubleBraces;
 import static com.feather.idea.Constants.singleBraces;
+import static com.feather.idea.FeatherUtil.inTemplateMethod;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.BRACES;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.INSTANCE_FIELD;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.INSTANCE_METHOD;
@@ -73,7 +74,7 @@ abstract class GenericAnnotator implements Annotator {
         String text = element.getText();
         Matcher m = singleBraces.matcher(text);
         int start = element.getTextRange().getStartOffset();
-        if (m.matches()) {
+        if (m.matches() && inTemplateMethod(element)) {
             String property = m.group(1);
             int matchStart = start + m.start(1);
             int matchEnd = start + m.end(1);

@@ -1,6 +1,7 @@
 package com.feather.idea;
 
 import static com.feather.idea.Constants.classSplitter;
+import static com.feather.idea.FeatherUtil.inTemplateMethod;
 import static com.intellij.psi.util.PsiTreeUtil.findChildOfType;
 import static com.intellij.psi.util.PsiTreeUtil.getContextOfType;
 
@@ -17,7 +18,7 @@ import com.intellij.psi.xml.XmlText;
 import java.util.regex.Matcher;
 import org.jetbrains.annotations.NotNull;
 
-public class FeatherAnnotator extends GenericAnnotator implements Annotator {
+public class InjectedHtmlAnnotator extends GenericAnnotator implements Annotator {
 
 
     @Override
@@ -78,6 +79,5 @@ public class FeatherAnnotator extends GenericAnnotator implements Annotator {
                 );
             }
         }
-
     }
 }
