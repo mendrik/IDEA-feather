@@ -1,7 +1,6 @@
 package com.feather.idea;
 
 import static com.feather.idea.Constants.classSplitter;
-import static com.feather.idea.FeatherUtil.inTemplateMethod;
 import static com.intellij.psi.util.PsiTreeUtil.findChildOfType;
 import static com.intellij.psi.util.PsiTreeUtil.getContextOfType;
 

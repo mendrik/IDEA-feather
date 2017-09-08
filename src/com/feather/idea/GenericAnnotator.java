@@ -2,7 +2,6 @@ package com.feather.idea;
 
 import static com.feather.idea.Constants.doubleBraces;
 import static com.feather.idea.Constants.singleBraces;
-import static com.feather.idea.FeatherUtil.inTemplateMethod;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.BRACES;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.INSTANCE_FIELD;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.INSTANCE_METHOD;
@@ -54,19 +53,21 @@ abstract class GenericAnnotator implements Annotator {
     }
 
     private void doDoubleBraceMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder, int braceLength) {
-        String text = element.getText();
-        Matcher m = doubleBraces.matcher(text);
-        int start = element.getTextRange().getStartOffset();
-        while (m.find()) {
-            FeatherStatement fs = new FeatherStatement(m.group(1));
-            highlight(
-                FeatherUtil.findField(fs.getProperty(), element).isPresent(),
-                start + m.start(1),
-                fs,
-                element,
-                holder,
-                braceLength
-            );
+        if (FeatherUtil.inTemplateMethod(element)) {
+            String text = element.getText();
+            Matcher m = doubleBraces.matcher(text);
+            int start = element.getTextRange().getStartOffset();
+            while (m.find()) {
+                FeatherStatement fs = new FeatherStatement(m.group(1));
+                highlight(
+                    FeatherUtil.findField(fs.getProperty(), element).isPresent(),
+                    start + m.start(1),
+                    fs,
+                    element,
+                    holder,
+                    braceLength
+                );
+            }
         }
     }
 
@@ -74,7 +75,7 @@ abstract class GenericAnnotator implements Annotator {
         String text = element.getText();
         Matcher m = singleBraces.matcher(text);
         int start = element.getTextRange().getStartOffset();
-        if (m.matches() && inTemplateMethod(element)) {
+        if (m.matches()) {
             String property = m.group(1);
             int matchStart = start + m.start(1);
             int matchEnd = start + m.end(1);

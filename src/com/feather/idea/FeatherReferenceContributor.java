@@ -38,16 +38,18 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
             new PsiReferenceProvider() {
                 public PsiReference[] getReferencesByElement(PsiElement element, ProcessingContext context) {
                     if (element instanceof XmlAttribute || element instanceof XmlAttributeValue || element instanceof XmlToken) {
-                        PsiReference[] references = getHtmlReferences(element);
-                        if (element instanceof XmlAttributeValue) {
-                            XmlAttribute attribute = (XmlAttribute) element.getParent();
-                            if ("class".equalsIgnoreCase(attribute.getName())) {
-                                return (PsiReference[]) ArrayUtils.addAll(references, getCssClassReferences(element));
-                            } else if (inTemplateMethod(element)) {
-                                return (PsiReference[]) ArrayUtils.addAll(references, getSingleBraceReferences(element));
+                        if (inTemplateMethod(element)) {
+                            PsiReference[] references = getHtmlReferences(element);
+                            if (element instanceof XmlAttributeValue) {
+                                XmlAttribute attribute = (XmlAttribute) element.getParent();
+                                if ("class".equalsIgnoreCase(attribute.getName())) {
+                                    return (PsiReference[]) ArrayUtils.addAll(references, getCssClassReferences(element));
+                                } else {
+                                    return (PsiReference[]) ArrayUtils.addAll(references, getSingleBraceReferences(element));
+                                }
                             }
+                            return references;
                         }
-                        return references;
                     } else if (element instanceof XmlTag) {
                         XmlTag tag = (XmlTag) element;
                         return getTagReference(tag.getName(), tag)
