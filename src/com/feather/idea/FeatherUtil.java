@@ -46,6 +46,10 @@ class FeatherUtil {
                     return field;
                 }
             }
+            Optional<JSQualifiedNamedElement> singletonMethod = findSingletonMethod(property, parent);
+            if (singletonMethod.isPresent()) {
+                return singletonMethod;
+            }
             return findBequeathProperty(property, parent);
         }
         return Optional.empty();
@@ -73,9 +77,29 @@ class FeatherUtil {
             .findFirst();
     }
 
+    private static Optional<JSQualifiedNamedElement> findSingletonMethod(String property, JSElement classElement) {
+        Project project = classElement.getProject();
+        GlobalSearchScope scope = JSResolveUtil.getResolveScope(classElement);
+        return StubIndex.getElements(JSSymbolIndex2.KEY, property, project, scope, JSElement.class)
+            .stream()
+            .filter(e -> e instanceof JSQualifiedNamedElement)
+            .map(e -> ((JSQualifiedNamedElement) e))
+            .filter(FeatherUtil::isSingletonMethod)
+            .findFirst();
+    }
+
     private static boolean isBequeathProperty(JSQualifiedNamedElement element) {
         ES6FieldStatementImpl parent = getParentOfType(element, ES6FieldStatementImpl.class);
         return parent != null && findChildrenOfType(parent, JSProperty.class).stream().anyMatch(p -> "bequeath".equalsIgnoreCase(p.getName()));
+    }
+
+    private static boolean isSingletonMethod(JSQualifiedNamedElement element) {
+        TypeScriptClass parent = getParentOfType(element, TypeScriptClass.class);
+        return parent != null && findChildrenOfType(parent, JSProperty.class).stream()
+            .anyMatch(p ->
+                "singleton".equalsIgnoreCase(p.getName()) &&
+                p.getValue() != null && "true".equalsIgnoreCase(p.getValue().getText())
+            );
     }
 
     static Optional<TypeScriptClass> findClassBySelector(@NotNull String selector, @NotNull PsiElement classElement) {
