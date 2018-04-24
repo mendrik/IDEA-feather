@@ -48,12 +48,8 @@ abstract class GenericAnnotator implements Annotator {
         }
     }
 
-    void doDoubleBraceMatches(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
-        doDoubleBraceMatches(element, holder, 2);
-    }
-
     void doDoubleBraceMatchesInTemplate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
-        if (FeatherUtil.inTemplateMethod(element)) {
+        if (FeatherUtil.inDecoratedMethod("template", element)) {
             doDoubleBraceMatches(element, holder, 2);
         }
     }

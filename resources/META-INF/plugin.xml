@@ -31,7 +31,6 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <annotator language="HTML" implementationClass="com.feather.idea.InjectedHtmlAnnotator"/>
-        <annotator language="TypeScript" implementationClass="com.feather.idea.TypescriptAnnotator"/>
         <psi.referenceContributor implementation="com.feather.idea.FeatherReferenceContributor"/>
     </extensions>
 

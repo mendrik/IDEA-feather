@@ -1,29 +1,17 @@
 package com.feather.idea;
 
-import static com.feather.idea.FeatherUtil.inTemplateMethod;
+import static com.feather.idea.FeatherUtil.inDecoratedMethod;
 
 import com.intellij.lang.javascript.psi.JSLiteralExpression;
-import com.intellij.lang.javascript.psi.JSReferenceExpression;
 import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
 import com.intellij.lang.javascript.psi.ecma6.TypeScriptClass;
-import com.intellij.lang.javascript.psi.ecma6.TypeScriptFunction;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.patterns.PlatformPatterns;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
-import com.intellij.psi.PsiReferenceContributor;
-import com.intellij.psi.PsiReferenceProvider;
-import com.intellij.psi.PsiReferenceRegistrar;
+import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.psi.xml.XmlAttribute;
-import com.intellij.psi.xml.XmlAttributeValue;
-import com.intellij.psi.xml.XmlTag;
-import com.intellij.psi.xml.XmlToken;
+import com.intellij.psi.xml.*;
 import com.intellij.util.ProcessingContext;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import org.apache.commons.lang.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
@@ -36,9 +24,10 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
     public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
         registrar.registerReferenceProvider(PlatformPatterns.psiElement(),
             new PsiReferenceProvider() {
-                public PsiReference[] getReferencesByElement(PsiElement element, ProcessingContext context) {
+                @NotNull
+                public PsiReference[] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
                     if (element instanceof XmlAttribute || element instanceof XmlAttributeValue || element instanceof XmlToken) {
-                        if (inTemplateMethod(element)) {
+                        if (inDecoratedMethod("template", element)) {
                             PsiReference[] references = getHtmlReferences(element);
                             if (element instanceof XmlAttributeValue) {
                                 XmlAttribute attribute = (XmlAttribute) element.getParent();
@@ -64,7 +53,8 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
         );
         registrar.registerReferenceProvider(PlatformPatterns.psiElement(JSLiteralExpression.class),
             new PsiReferenceProvider() {
-                public PsiReference[] getReferencesByElement(PsiElement element, ProcessingContext context) {
+                @NotNull
+                public PsiReference[] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
                     return inDecorator(element) ? getHtmlReferences(element) : new PsiReference[0];
                 }
             }
@@ -83,7 +73,7 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
                 );
             });
         }
-        return res.toArray(new PsiReference[res.size()]);
+        return res.toArray(new PsiReference[0]);
     }
 
     private PsiReference[] getCssClassReferences(PsiElement value) {
@@ -96,7 +86,7 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
                 new FeatherClassReference(value, new TextRange(m.start(1), m.end(1)), typeScriptClass)
             ));
         }
-        return res.toArray(new PsiReference[res.size()]);
+        return res.toArray(new PsiReference[0]);
     }
 
     private Optional<FeatherClassReference> getTagReference(String tagName, XmlTag tagElement) {
@@ -111,7 +101,7 @@ public class FeatherReferenceContributor extends PsiReferenceContributor impleme
         while (m.find()) {
             res.addAll(getReferencesToFields(element, m));
         }
-        return res.toArray(new PsiReference[res.size()]);
+        return res.toArray(new PsiReference[0]);
     }
 
     private Collection<FeatherFieldReference> getReferencesToFields(PsiElement element, Matcher m) {

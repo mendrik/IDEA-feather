@@ -1,23 +1,12 @@
 package com.feather.idea;
 
-import static com.intellij.psi.util.PsiTreeUtil.findChildOfType;
-import static com.intellij.psi.util.PsiTreeUtil.findChildrenOfType;
-import static com.intellij.psi.util.PsiTreeUtil.getContextOfType;
-import static com.intellij.psi.util.PsiTreeUtil.getParentOfType;
+import static com.intellij.psi.util.PsiTreeUtil.*;
 import static java.util.Optional.ofNullable;
 
 import com.intellij.lang.ecmascript6.psi.impl.ES6FieldStatementImpl;
-import com.intellij.lang.javascript.ecmascript6.TypeScriptUtil;
-import com.intellij.lang.javascript.psi.JSElement;
-import com.intellij.lang.javascript.psi.JSLiteralExpression;
-import com.intellij.lang.javascript.psi.JSProperty;
-import com.intellij.lang.javascript.psi.JSReferenceExpression;
-import com.intellij.lang.javascript.psi.ecma6.ES6Decorator;
-import com.intellij.lang.javascript.psi.ecma6.TypeScriptClass;
-import com.intellij.lang.javascript.psi.ecma6.TypeScriptField;
-import com.intellij.lang.javascript.psi.ecma6.TypeScriptFunction;
-import com.intellij.lang.javascript.psi.ecmal4.JSClass;
-import com.intellij.lang.javascript.psi.ecmal4.JSQualifiedNamedElement;
+import com.intellij.lang.javascript.psi.*;
+import com.intellij.lang.javascript.psi.ecma6.*;
+import com.intellij.lang.javascript.psi.ecmal4.*;
 import com.intellij.lang.javascript.psi.resolve.JSResolveUtil;
 import com.intellij.lang.javascript.psi.stubs.JSSymbolIndex2;
 import com.intellij.openapi.project.Project;
@@ -27,8 +16,8 @@ import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class FeatherUtil {
 
@@ -40,66 +29,40 @@ class FeatherUtil {
                 return field;
             }
             JSClass[] superClasses = parent.getSuperClasses();
-            for (JSClass clazz: superClasses) {
+            for (JSClass clazz : superClasses) {
                 field = findProperty(property, clazz);
                 if (field.isPresent()) {
                     return field;
                 }
             }
-            Optional<JSQualifiedNamedElement> singletonMethod = findSingletonMethod(property, parent);
-            if (singletonMethod.isPresent()) {
-                return singletonMethod;
+            Optional<JSQualifiedNamedElement> transformerMethod = findTransformerMethod(property, parent);
+            if (transformerMethod.isPresent()) {
+                return transformerMethod;
             }
-            return findBequeathProperty(property, parent);
         }
         return Optional.empty();
     }
 
     private static Optional<JSQualifiedNamedElement> findProperty(String property, JSClass parent) {
         return PsiTreeUtil
-                    .<JSQualifiedNamedElement>findChildrenOfAnyType(parent,
-                        TypeScriptField.class,
-                        TypeScriptFunction.class
-                    )
-                    .stream()
-                    .filter(p -> Objects.equals(p.getName(), property))
-                    .findFirst();
-    }
-
-    private static Optional<JSQualifiedNamedElement> findBequeathProperty(String property, JSElement classElement) {
-        Project project = classElement.getProject();
-        GlobalSearchScope scope = JSResolveUtil.getResolveScope(classElement);
-        return StubIndex.getElements(JSSymbolIndex2.KEY, property, project, scope, JSElement.class)
+            .<JSQualifiedNamedElement>findChildrenOfAnyType(parent,
+                TypeScriptField.class,
+                TypeScriptFunction.class
+            )
             .stream()
-            .filter(e -> e instanceof JSQualifiedNamedElement)
-            .map(e -> ((JSQualifiedNamedElement) e))
-            .filter(FeatherUtil::isBequeathProperty)
+            .filter(p -> Objects.equals(p.getName(), property))
             .findFirst();
     }
 
-    private static Optional<JSQualifiedNamedElement> findSingletonMethod(String property, JSElement classElement) {
+    private static Optional<JSQualifiedNamedElement> findTransformerMethod(String method, JSElement classElement) {
         Project project = classElement.getProject();
         GlobalSearchScope scope = JSResolveUtil.getResolveScope(classElement);
-        return StubIndex.getElements(JSSymbolIndex2.KEY, property, project, scope, JSElement.class)
+        return StubIndex.getElements(JSSymbolIndex2.KEY, method, project, scope, JSElement.class)
             .stream()
             .filter(e -> e instanceof JSQualifiedNamedElement)
             .map(e -> ((JSQualifiedNamedElement) e))
-            .filter(FeatherUtil::isSingletonMethod)
+            .filter(x -> inDecoratedMethod("transformer", x))
             .findFirst();
-    }
-
-    private static boolean isBequeathProperty(JSQualifiedNamedElement element) {
-        ES6FieldStatementImpl parent = getParentOfType(element, ES6FieldStatementImpl.class);
-        return parent != null && findChildrenOfType(parent, JSProperty.class).stream().anyMatch(p -> "bequeath".equalsIgnoreCase(p.getName()));
-    }
-
-    private static boolean isSingletonMethod(JSQualifiedNamedElement element) {
-        TypeScriptClass parent = getParentOfType(element, TypeScriptClass.class);
-        return parent != null && findChildrenOfType(parent, JSProperty.class).stream()
-            .anyMatch(p ->
-                "singleton".equalsIgnoreCase(p.getName()) &&
-                p.getValue() != null && "true".equalsIgnoreCase(p.getValue().getText())
-            );
     }
 
     static Optional<TypeScriptClass> findClassBySelector(@NotNull String selector, @NotNull PsiElement classElement) {
@@ -136,17 +99,22 @@ class FeatherUtil {
             );
     }
 
-    static boolean inTemplateMethod(PsiElement element) {
+    static boolean inDecoratedMethod(String decorator, PsiElement element) {
         if (element == null) {
             return false;
         }
-        TypeScriptFunction func = getContextOfType(element, TypeScriptFunction.class);
-        if (func != null) {
-            ES6Decorator deco = PsiTreeUtil.findChildOfType(func, ES6Decorator.class);
-            if (deco != null) {
-                JSReferenceExpression decoCall = PsiTreeUtil.findChildOfType(deco, JSReferenceExpression.class);
-                return (decoCall != null) && "template".equalsIgnoreCase(decoCall.getReferenceName());
-            }
+        JSAttributeListOwner ctx = getContextOfType(element, JSAttributeListOwner.class);
+        return ofNullable(ctx)
+                .map(f -> inDecorateMethod(decorator, f))
+                .orElse(false);
+    }
+
+    @Nullable
+    private static boolean inDecorateMethod(String decorator, JSAttributeListOwner el) {
+        ES6Decorator deco = PsiTreeUtil.findChildOfType(el, ES6Decorator.class);
+        if (deco != null) {
+            JSReferenceExpression decoCall = PsiTreeUtil.findChildOfType(deco, JSReferenceExpression.class);
+            return (decoCall != null) && decorator.equalsIgnoreCase(decoCall.getReferenceName());
         }
         return false;
     }
